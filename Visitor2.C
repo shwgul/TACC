@@ -116,8 +116,7 @@ void setTypeVarMap()  {
     line = transData.type_variable.at(i);
     std::vector<std::string> strs;
     boost::split(strs,line,boost::is_any_of("\t "));
-    cout << strs[0] <<" "<<strs[1]<<endl; 
-    pairs[strs[0]]=strs[1];
+    pairs[strs[1]]=strs[0];
   }
 }
 

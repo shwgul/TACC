@@ -45,7 +45,6 @@ void SimpleInstrumentationTwo::visit(SgNode* astNode) {
       location = transData.device_variable.at(i).find_first_of("[");
       tmp = transData.device_variable.at(i).substr(0, location);
       type = pairs[tmp];
-      cout << "var " << tmp << endl;
       if(i < transData.device_variable.size()-1) {
         param += type + " * " + tmp + ",";
       } else {
