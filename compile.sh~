@@ -1,0 +1,3 @@
+#!/bin/bash
+g++ -o Visitor2 Visitor2.C linearTranslator.C -I/opt/rose/include -L/opt/rose/lib -I/usr/local/installTree/include -L/usr/local/installTree/lib -lrose 
+

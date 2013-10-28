@@ -1,0 +1,243 @@
+#include <iostream>
+#include <cstring>
+#include <rose.h>
+#include <stdio.h>
+#include <fstream>
+#include <vector>
+#include <rewrite.h>
+#include "LinearTranslator.h"
+#include "Data.h"
+#include "Function.h"
+#include <map>
+
+using namespace SageInterface;
+using namespace SageBuilder;
+using namespace AstFromString;
+using namespace std;
+
+TRANSDATA transData;
+MAPA pairs;
+
+/**
+  * Remove blank space.
+  */
+char* deleteBlank(char* input)                                                  
+{
+  char* tmp = new char[strlen(input)];
+  for ( int i = 0, j = 0; i < strlen(input)+2; i++ )
+    if ( !isspace ( input[i] ) ) tmp[j++] =  input[i];
+   
+  return tmp;
+}
+
+/*
+ * Loada data used for the parser. The data is the loop that the user is 
+ * interested in parallalize.
+ */
+void loadData(char *tmp) {
+  char * ptk;
+  char *str;
+  string line;
+  ifstream file ("../GenData/parserData.txt");
+  
+  if (file.is_open()) {
+    while ( !file.eof() ) {
+      getline (file,line);
+      str = new char[line.size()+1];
+	    strcpy(str, line.c_str());
+	    transData.loop_file.push_back(line);
+      ptk = strtok(str, " ");
+	    while(ptk != NULL) {
+	      tmp = strcat(tmp, (char *) ptk);
+	      ptk = strtok(NULL, " ");
+	    }
+    }
+    file.close();
+  }
+  else cout << "Unable to open file"; 
+}
+
+
+/**
+  * Load initial parameters for translator.
+  */
+
+void loadDataTranslator() {
+  char * ptk;
+  char *str;
+  int isMatch;
+  string line;
+  ifstream file ("../GenData/genData.txt");
+  if (file.is_open()) {
+    //pattern
+    getline(file, line);
+	  getline (file,line);
+	  transData.pattern = line;
+	  
+	  // parallel option
+	  getline(file, line);
+	  getline (file,line);
+	  getline(file, line);
+	  transData.parallel = line;
+	  
+	  // language option
+	  getline(file, line);
+	  getline (file,line);
+	  getline(file, line);
+	  transData.language = line;
+	  
+	  //type variables
+	  getline(file, line);
+	  getline (file,line);
+	   while("##scalar_variables##" != line) {
+	    getline(file, line);
+	    if(line != "#" && line != "##scalar_variables##")
+	      transData.type_variable.push_back(line);
+	  }
+	  
+	  //scalar variable
+	   while("##Device_variables##" != line) {
+	    getline(file, line);
+	    if(line != "#" && line != "##Device_variables##")
+	      transData.scalar_variable.push_back(line);
+	  }
+	  
+	  while("##Loop_variable##" != line) {
+	    getline(file, line);
+	    if(line != "#" && line != "##Loop_variable##")
+	      transData.device_variable.push_back(line);
+	  }
+	  
+	  //device variables
+	  while("##Number_Of_Loops##" != line) {
+	    getline(file, line);
+	    if(line != "#" && line != "##Number_Of_Loops##")
+	      transData.loop_variable.push_back(line);
+	  }
+	  
+	  // number of loops
+	   while("##End##" != line) {
+	    getline(file, line);
+	    if(line != "#" && line != "##End##")
+	    transData.num_of_loops.push_back(line);
+	   }
+  }
+  else cout << "Unable to open file";   
+}
+
+/**
+  * set a map associative container that contatins the type of the varialbes.
+  */
+void setTypeVarMap()  {
+  char * ptkType;
+  char * ptkVar;
+  char *ptk;
+  char *str;
+  string line;
+  
+  for(int i = 0; i < transData.type_variable.size(); i++) {
+    line = transData.type_variable.at(i);
+    str = new char[line.size()+1];
+	  strcpy(str, line.c_str());
+	  ptk = strtok(str, " ");
+	  strcpy(ptkType, (char *) ptk);
+	  ptk = strtok(NULL, " ");
+	  strcpy(ptkVar, (char *) ptk);
+	  pairs.insert(MAPA::value_type(ptkVar, ptkType));
+  }
+}
+
+/**
+  * Main function. This main function has the parser to find the loop in the AST
+  * and start the tranlation.
+  */
+int main(int argc, char *argv[]) {
+  //Parser variables
+  ios::sync_with_stdio();
+  int isMatch;
+  const char  *str;
+  char *tmp1;
+  char *tmp2;
+  string line;
+  ofstream file;
+  
+  // translator variables 
+  string pattern;
+  string parallel;
+  string language;
+  vector<string> loop_variable;
+  vector<string> num_of_loops;
+  vector<string> device_variable;
+  
+  tmp1 = new char[10000];
+
+  // Load data
+  loadData(tmp1);
+  
+  if(SgProject::get_verbose() > 0)
+    printf("In processor.c: main() \n");
+    
+  SgProject* project = frontend(argc, argv);
+  ROSE_ASSERT(project != NULL);
+    
+  AstTests::runAllTests(const_cast<SgProject*>(project));
+  
+  /************************ Starting parser ***********************************/   
+  if(project->get_verbose() > 1)
+  {
+    cout << AstNodeStatistics::traversalStatistics(project);
+    cout << AstNodeStatistics::IRnodeUsageStatistics();
+  }
+  if(project->get_verbose() > 0)
+    printf("generate output\n");
+      
+  if(project->get_verbose() > 0)
+   printf("generate output 2\n");
+           
+  Rose_STL_Container<SgNode*> nodeList;
+  nodeList = NodeQuery::querySubTree(project,  V_SgForStatement);
+  Rose_STL_Container<SgNode*>::iterator i = nodeList.begin();
+  
+  
+  while(i != nodeList.end())
+  {
+        str = (*i)->unparseToString().c_str();
+        tmp2 = deleteBlank(const_cast<char *>(str));
+
+        isMatch = strcmp(tmp1, tmp2);    
+        if(isMatch == 0) {
+          cout << tmp1 << " " << tmp2 << endl;
+          file.open ("../GenData/log.txt");
+          file << tmp1 << " " << tmp2 << endl;
+          file.close();
+          break;
+        }
+        i++;
+  }
+  
+  /******************** starting translation **********************************/
+  
+  //load generator data
+  loadDataTranslator();
+  
+  // map varible - type
+  setTypeVarMap();
+    
+ SgStatement* loopStat = (SgStatement *) (*i);
+  SgLocatedNode *ln = isSgLocatedNode((*i)); 
+  
+  LinearTranslator lt;
+  // creates the host statements
+  if(transData.pattern == "Linear" && transData.parallel == "CUDA") {
+    if(transData.language == "C" ||transData.language == "CPP") {
+      lt.translateLinear(loopStat, ln);
+    }
+  }
+  
+  // creates the kernel function
+  SimpleInstrumentation treeTraversal;
+  treeTraversal.traverseInputFiles(project, preorder);
+  
+  AstTests::runAllTests(const_cast<SgProject*>(project));
+  return backend(project);
+}

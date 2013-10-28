@@ -1,0 +1,13 @@
+#ifndef LINEARTRANSLATOR_H
+#define LINEARTRANSLATOR_H
+
+#include <vector>
+
+using namespace std;
+
+class LinearTranslator {
+  public: 
+    void translateLinear(SgStatement* loopStat, SgLocatedNode *ln, vector<string> &loop_variable, vector<string> &num_of_loops, vector<string> &device_variable);
+};
+
+#endif

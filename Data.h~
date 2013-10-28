@@ -1,0 +1,31 @@
+#ifndef DATA_H_
+#define DATA_H_
+
+/**
+  * This header file has the data used by the translator.
+  */
+
+#include <vector>
+using namespace std;
+
+typedef struct
+{
+	string pattern;
+  string parallel;
+  string language;
+  vector<string> type_variable;
+  vector<string> scalar_variable;
+  vector<string> loop_variable;
+  vector<string> num_of_loops;
+  vector<string> device_variable;
+  vector<string> loop_file;
+  //vector<string> header_line;
+} TRANSDATA;
+
+extern "C" TRANSDATA transData;
+
+typedef map<string, string, less< int > > MAPA;
+
+extern "C" MAPA pairs;
+
+#endif
