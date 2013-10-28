@@ -1,10 +1,7 @@
 
-void kernel(float *a)
-__global__ void kernel(int * grid,int * newGrid, int dim, int maxIter)
+void __global__ kernel(int **grid,int **newGrid,int dim,int maxIter)
 {
   int j;
-  int k;
-  int iter;
   int i;
   i = blockIdx.x * blockDim.x + threadIdx.x;
   j = blockIdx.y * blockDim.y + threadIdx.y;
@@ -24,8 +21,6 @@ __global__ void kernel(int * grid,int * newGrid, int dim, int maxIter)
                     newGrid[i][j] = grid[i][j];
             }
         }
-if(j<=dim)
-if(j<=dim)
 }
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,8 +71,8 @@ int main(int argc,char *argv[])
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
-int *  device_grid;
-int *  device_newGrid;
+int **  device_grid;
+int **  device_newGrid;
  
   //Allocate memory space in the GPU
   cudaMalloc((void **) &device_grid, sizeof(grid));

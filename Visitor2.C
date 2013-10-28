@@ -107,10 +107,6 @@ void loadDataTranslator() {
 }
 
 void setTypeVarMap()  {
-  char * ptkType;
-  char * ptkVar;
-  char *ptk;
-  char *str;
   string line;
   for(int i = 0; i < transData.type_variable.size(); i++) {
     line = transData.type_variable.at(i);
@@ -118,6 +114,14 @@ void setTypeVarMap()  {
     boost::split(strs,line,boost::is_any_of("\t "));
     pairs[strs[1]]=strs[0];
   }
+  cout <<"Variable and types "<<endl;
+  cout<<"***************************"<<endl;
+  map<string,string>::iterator it = pairs.begin(); 
+  while (it != pairs.end()) { 
+    cout<<it->first<<" "<<it->second<<endl;
+    it++;
+  }
+  cout<<"******************************"<<endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -211,5 +215,12 @@ int main(int argc, char *argv[]) {
   }
 
   AstTests::runAllTests(const_cast<SgProject*>(project));
-  return backend(project);
+  //return backend(project);
+  string outputFile = argv[argc-1];
+  string cmd = "nvcc "+outputFile;
+  cout<<"Compiling "<<outputFile<<endl;
+  cout<<"Executing "<<cmd<<endl;
+  cout<<"Compiler Output "<<endl;
+  system(cmd.c_str());
+  return 0;
 }
