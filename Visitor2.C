@@ -193,6 +193,7 @@ int main(int argc, char *argv[]) {
   } else if (transData.pattern == "CUDA:Double-nested-for-loop" 
       && transData.parallel == "CUDA") {
     if(transData.language == "C" ||transData.language == "CPP") {
+      cout<<"Parallelizing Double nested loop"<<endl;
       twoHostTranslator.translateTwoHost(loopStat, locatedNode);
       nodeList = NodeQuery::querySubTree(project,  V_SgStatement);
       for(int j = 0; j < transData.function_declaration.size(); j++) {
@@ -215,7 +216,7 @@ int main(int argc, char *argv[]) {
   }
 
   AstTests::runAllTests(const_cast<SgProject*>(project));
-  //return backend(project);
+  backend(project);
   string outputFile = argv[argc-1];
   string cmd = "nvcc "+outputFile;
   cout<<"Compiling "<<outputFile<<endl;

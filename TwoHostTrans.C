@@ -97,7 +97,7 @@ void TwoHostTranslator::translateTwoHost(SgStatement* loopStat, SgLocatedNode *l
 
   //find for loop
   setInnerLoop();
-
+  cout<<"Read the file and inner loop";
   att = attachArbitraryText(ln, " " ,  PreprocessingInfo::before);
   att = attachArbitraryText(ln, "  /***** Starting Parallalization *****/" ,  
       PreprocessingInfo::before);

@@ -103,7 +103,7 @@ void SimpleInstrumentationTwo::visit(SgNode* astNode) {
     for(int i = 0; i < transData.loop_variable.size(); i++) {
         varDeclaration = buildVariableDeclaration(transData.loop_variable.at(i),buildIntType());
         prependStatement(varDeclaration,functionBody);
-      } 
+    } 
 
     //  create kernel function statements
     string thx = "  " + transData.loop_variable.at(0) + " = blockIdx.x * blockDim.x + threadIdx.x;";
@@ -114,6 +114,7 @@ void SimpleInstrumentationTwo::visit(SgNode* astNode) {
 
     string numLoops = transData.num_of_loops.at(0);
     var = transData.loop_variable.at(0);
+    //TODO put conditions over all the loop variables
     string condition = "  if(" + var + " " + numLoops + "){";
     att = attachArbitraryText(ln, condition,  PreprocessingInfo::inside);
 
