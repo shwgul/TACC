@@ -101,7 +101,6 @@ void TwoHostTranslator::translateTwoHost(SgStatement* loopStat, SgLocatedNode *l
   att = attachArbitraryText(ln, " " ,  PreprocessingInfo::before);
   att = attachArbitraryText(ln, "  /***** Starting Parallalization *****/" ,  
       PreprocessingInfo::before);
-
   // ********************** declare device variables **************************/
   att = attachArbitraryText(ln,"  //declare device variables",  PreprocessingInfo::before);
   att = attachArbitraryText(ln,"  float elapsedTime;",  PreprocessingInfo::before);

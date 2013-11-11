@@ -1,3 +1,4 @@
+#include <thrust/device_vector.h>
 
 void __global__ kernel(int **grid,int **newGrid,int dim,int maxIter)
 {
@@ -6,7 +7,7 @@ void __global__ kernel(int **grid,int **newGrid,int dim,int maxIter)
   i = blockIdx.x * blockDim.x + threadIdx.x;
   j = blockIdx.y * blockDim.y + threadIdx.y;
  
-  if(i <=dim) {
+  if(i <=dim){
             for (j = 1; j<=dim; j++) {
                 int numNeighbors =(((((((grid[i+1][j]+grid[i-1][j])+grid[i][j+1])+grid[i][j-1])+grid[i+1][j+1])+grid[i-1][j-1])+grid[i-1][j+1])+grid[i+1][j-1]);
                 if ((grid[i][j] == 1) && (numNeighbors < 2))
@@ -41,8 +42,8 @@ int main(int argc,char *argv[])
   int i;
   int j;
   int iter;
-  int dim = 1024;
-  int maxIter = 1 << 10;
+  int dim = 10;
+  int maxIter = 1 << 4;
   int **grid = (int **)(malloc((sizeof(int *) * (dim + 2))));
   for (i = 0; i < (dim + 2); i++) 
     grid[i] = ((int *)(malloc((sizeof(int *) * (dim + 2)))));
@@ -52,7 +53,7 @@ int main(int argc,char *argv[])
   srand(1985);
   for (i = 1; i <= dim; i++) {
     for (j = 1; j <= dim; j++) {
-      grid[i][j] = (rand() % 2);
+      grid[i][j] = ((i+j) % 2);
     }
   }
   for (iter = 0; iter < maxIter; iter++) {

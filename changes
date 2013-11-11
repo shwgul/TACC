@@ -1,0 +1,72 @@
+25,39d24
+< int calculateNumLoops() { 
+<   string line;
+<   ifstream file ("../GenData/parserData.txt");
+<   int numLoops = 1;
+<   if (file.is_open()) {
+<     while ( !file.eof() ) {
+<       getline (file, line);
+<       if (line.find("#")!=string::npos) { 
+<         numLoops++;
+<       }
+<     }
+<   file.close();
+<   }
+<   return numLoops;
+< }
+42,43d26
+<   int numLoops = calculateNumLoops();
+<   transData.all_loops.resize(numLoops);
+46c29
+<   int curentLoop = 0;
+---
+> 
+50,54c33
+<       if (line.find("#") != string::npos) {
+<        currentLoop++; 
+<       } else {
+<         transData.all_loops[currentLoop].push_back(line);
+<       }
+---
+>       transData.loop_file.push_back(line);
+57,60d35
+<     transData.loop_file = transData.all_loops[0];
+<   }
+<   else {
+<     cout << "Unable to open file";
+61a37
+>   else cout << "Unable to open file";
+133a110,113
+>   char * ptkType;
+>   char * ptkVar;
+>   char *ptk;
+>   char *str;
+139,146c119,120
+<     pairs[strs[1]]=strs[0];
+<   }
+<   cout <<"Variable and types "<<endl;
+<   cout<<"***************************"<<endl;
+<   map<string,string>::iterator it = pairs.begin(); 
+<   while (it != pairs.end()) { 
+<     cout<<it->first<<" "<<it->second<<endl;
+<     it++;
+---
+>     cout << strs[0] <<" "<<strs[1]<<endl; 
+>     pairs[strs[0]]=strs[1];
+148d121
+<   cout<<"******************************"<<endl;
+181d153
+<     cout << "NodeString" << nodeString;
+221d192
+<       cout<<"Parallelizing Double nested loop"<<endl;
+244,251c215
+<   backend(project);
+<   string outputFile = argv[argc-1];
+<   string cmd = "nvcc "+outputFile;
+<   cout<<"Compiling "<<outputFile<<endl;
+<   cout<<"Executing "<<cmd<<endl;
+<   cout<<"Compiler Output "<<endl;
+<   system(cmd.c_str());
+<   return 0;
+---
+>   return backend(project);

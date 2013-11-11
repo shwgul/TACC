@@ -115,9 +115,8 @@ void SimpleInstrumentationTwo::visit(SgNode* astNode) {
     string numLoops = transData.num_of_loops.at(0);
     var = transData.loop_variable.at(0);
     //TODO put conditions over all the loop variables
-    string condition = "  if(" + var + " " + numLoops + "){";
+    string condition = "  if(" + var + " " + numLoops + ") {";
     att = attachArbitraryText(ln, condition,  PreprocessingInfo::inside);
-
     for(int j = 1; j < transData.loop_file.size(); j++) {
       string line = transData.loop_file.at(j);
       att = attachArbitraryText(ln, line,  PreprocessingInfo::inside);

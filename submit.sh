@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -J GPU_Job           # job name
-#SBATCH -o myMPI.o%j       # output and error file name (%j expands to jobID)
-#SBATCH -p gpu     # queue (partition) -- normal, development, etc.
+#SBATCH -o test_out       # output and error file name (%j expands to jobID)
+#SBATCH -p devel-gpu     # queue (partition) -- normal, development, etc.
 #SBATCH -N 1
 #SBATCH -A TG-ASC130034
 #SBATCH -n 1

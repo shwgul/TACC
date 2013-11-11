@@ -1,0 +1,151 @@
+08 November 2013 01:50:04 PM
+
+POISSON_SERIAL:
+  C version
+  A program for solving the Poisson equation.
+
+  -DEL^2 U = F(X,Y)
+
+  on the rectangle 0 <= X <= 1, 0 <= Y <= 1.
+
+  F(X,Y) = pi^2 * ( x^2 + y^2 ) * sin ( pi * x * y )
+
+  The number of interior X grid points is 11
+  The number of interior Y grid points is 11
+  The X grid spacing is 0.100000
+  The Y grid spacing is 0.100000
+  RMS of F = 4.81514
+  RMS of exact solution = 0.600498
+
+  Step    ||Unew||     ||Unew-U||     ||Unew-Exact||
+
+     0         0.28748                        0.527212
+the elapsed time is 0.000000
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0.309017
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0.587785
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0.809017
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0.951057
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep1
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0.951057
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0.809017
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0.587785
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0
+unew after sweep0.309017
+unew after sweep0
+unew after sweep0.309017
+unew after sweep0.587785
+unew after sweep0.809017
+unew after sweep0.951057
+unew after sweep1
+unew after sweep0.951057
+unew after sweep0.809017
+unew after sweep0.587785
+unew after sweep0.309017
+unew after sweep1.22465e-16
+     1         0.28748               0        0.527212
+  The iteration has converged.
+
+POISSON_SERIAL:
+  Normal end of execution.
+
+08 November 2013 01:50:05 PM

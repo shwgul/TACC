@@ -28,6 +28,7 @@ typedef struct
   vector<string> loop_variable;
   vector<string> num_of_loops;
   vector<string> device_variable;
+  vector<vector<string> > all_loops;
   vector<string> loop_file; 
   vector<string> function_declaration;
   vector<string> loopLine;

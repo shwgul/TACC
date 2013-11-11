@@ -22,7 +22,7 @@ using namespace AstFromString;
 using namespace std;
 MAPA pairs;
 TRANSDATA transData;
-
+/*
 void loadLoopData() {
   string line;
   ifstream file ("../GenData/parserData.txt");
@@ -35,7 +35,44 @@ void loadLoopData() {
     file.close();
   }
   else cout << "Unable to open file";
-}
+}*/
+int calculateNumLoops() {                                                                                             
+  string line;                                                                                                        
+  ifstream file ("../GenData/parserData.txt");                                                                        
+  int numLoops = 1;                                                                                                   
+  if (file.is_open()) {                                                                                               
+    while ( !file.eof() ) {                                                                                           
+      getline (file, line);                                                                                           
+      if (line.find("#")!=string::npos) {                                                                             
+        numLoops++;                                                                                                   
+      }                                                                                                               
+    }                                                                                                                 
+  file.close();                                                                                                       
+  }                                                                                                                   
+  return numLoops;                                                                                                    
+}                                                                                                                     
+                                                                                                                      
+void loadLoopData() {                                                                                                 
+  int numLoops = calculateNumLoops();                                                                                 
+  transData.all_loops.resize(numLoops);                                                                               
+  string line;                                                                                                        
+  ifstream file ("../GenData/parserData.txt");                                                                        
+  int currentLoop = 0;                                                                                                
+  if (file.is_open()) {                                                                                               
+    while ( !file.eof() ) {                                                                                           
+      getline (file,line);                                                                                            
+      if (line.find("#") != string::npos) {                                                                           
+       currentLoop++;                                                                                                 
+      } else {                                                                                                        
+        transData.all_loops[currentLoop].push_back(line);                                                             
+      }                                                                                                               
+    }                                                                                                                 
+    file.close();                                                                                                     
+  }                                                                                                                   
+  else {                                                                                                              
+    cout << "Unable to open file";                                                                                    
+  }                                                                                                                   
+} 
 
 void loadDataTranslator() {
   char * ptk;
@@ -123,12 +160,17 @@ void setTypeVarMap()  {
   }
   cout<<"******************************"<<endl;
 }
-
 int main(int argc, char *argv[]) {
   ios::sync_with_stdio();
   ofstream file;
   loadLoopData();
+  SgProject* project = frontend(argc, argv);
+  ROSE_ASSERT(project != NULL);
+for(int currentLoop = 0;currentLoop < transData.all_loops.size();currentLoop++) { 
+  transData.loop_file.clear();
+  transData.loop_file = transData.all_loops[currentLoop];
   string selectedLoop;
+  cout<<transData.loop_file.size();
   for(int i = 0; i < transData.loop_file.size(); i++) {
     selectedLoop += transData.loop_file.at(i);
   }
@@ -137,10 +179,9 @@ int main(int argc, char *argv[]) {
   if(SgProject::get_verbose() > 0) {
     cout << "In processor.c: main() \n";
   }
-  SgProject* project = frontend(argc, argv);
   ROSE_ASSERT(project != NULL);
   //AstTests::runAllTests(const_cast<SgProject*>(project));
-  if(project->get_verbose() > 1)
+  if (project->get_verbose() > 1)
   {
     cout << AstNodeStatistics::traversalStatistics(project);
     cout << AstNodeStatistics::IRnodeUsageStatistics();
@@ -214,7 +255,7 @@ int main(int argc, char *argv[]) {
       }
     } 
   }
-
+}
   AstTests::runAllTests(const_cast<SgProject*>(project));
   backend(project);
   string outputFile = argv[argc-1];
