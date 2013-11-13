@@ -184,16 +184,16 @@ int main ( int argc, char *argv[] )
 
 
 
-   /* for ( j = 0; j < ny; j++ )
+  /*  for ( j = 0; j < ny; j++ )
         {
               for ( i = 0; i < nx; i++ )
               {
                   
-                  cout << "unew after sweep" << unew[i][j] << endl;;
+                  cout << unew[i][j] << " ";;
               }
           }
-    
     */
+    
      u_norm = unew_norm;
     unew_norm = r8mat_rms ( nx, ny, unew );
 

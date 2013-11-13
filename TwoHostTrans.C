@@ -8,7 +8,7 @@
 #include <rewrite.h>
 #include "TwoHostTranslator.h"
 #include "Data.h"
-
+#include <map>
 using namespace SageInterface;
 using namespace SageBuilder;
 using namespace AstFromString;
@@ -94,7 +94,7 @@ void TwoHostTranslator::translateTwoHost(SgStatement* loopStat, SgLocatedNode *l
 
   //read file
   readFile();
-
+  map<string,pair<string,pair<string,string> > > varMap;
   //find for loop
   setInnerLoop();
   cout<<"Read the file and inner loop";
@@ -111,7 +111,7 @@ void TwoHostTranslator::translateTwoHost(SgStatement* loopStat, SgLocatedNode *l
     location = transData.device_variable.at(i).find_first_of("[");
     bool is2D = false;
     if (transData.device_variable.at(i).find_last_of("[") != location) { 
-      is2D = true;
+      is2D = false;
     }
     var = transData.device_variable.at(i).substr(0, location);
     type = pairs[var];
@@ -120,6 +120,10 @@ void TwoHostTranslator::translateTwoHost(SgStatement* loopStat, SgLocatedNode *l
     } else { 
       varDeclaration = type + " * " + " device_" + var + ";";
     }
+    string ts = transData.device_variable.at(i);
+    string fl = ts.substr(ts.find_first_of("[")+1,ts.find_first_of("]") - ts.find_first_of("[")-1);
+    string sl = ts.substr(ts.find_last_of("[")+1,ts.find_last_of("]") - ts.find_last_of("[")-1);
+    varMap[var]=make_pair(type,make_pair(fl,sl));;
     attStat = new char[varDeclaration.size()+1];
     strcpy(attStat, varDeclaration.c_str());
     att = attachArbitraryText(ln, attStat,  PreprocessingInfo::before);
@@ -130,9 +134,31 @@ void TwoHostTranslator::translateTwoHost(SgStatement* loopStat, SgLocatedNode *l
   att = attachArbitraryText(ln,"  //Allocate memory space in the GPU",  
       PreprocessingInfo::before);
   for(int i = 0; i < transData.device_variable.size(); i++) {
+    string ts = transData.device_variable.at(i);
+    string flatVar = ts.substr(0,ts.find_first_of("["));
+    pair<string,pair<string, string> > pp = varMap[flatVar];
+    string type = pp.first;
+    string fl = pp.second.first;
+    string sl = pp.second.second;
+    //string dec  = pairs[flatVar]+"* "+flatVar+"_flat = ("+type+"*)malloc(sizeof("+type+")*"+fl+"*"+sl+");";
+    string dec = pairs[flatVar] +" "+flatVar+"_flat[("+fl+")*("+sl+")];";
+    att = attachArbitraryText(ln, dec,  PreprocessingInfo::before);
+  }
+  for(int i = 0; i < transData.device_variable.size(); i++) {
+    string ts = transData.device_variable.at(i);
+    string flatVar = ts.substr(0,ts.find_first_of("["));
+    pair<string,pair<string, string> > pp = varMap[flatVar];
+    string type = pp.first;
+    string fl = pp.second.first;
+    string sl = pp.second.second;
+    string dec  = "for(int ii=0;ii<"+fl+";ii++){for(int jj=0;jj<"+sl+";jj++){"+flatVar+"_flat[ii*("+sl+")+jj] = "+flatVar+"[ii][jj];}}";
+    att = attachArbitraryText(ln, dec,  PreprocessingInfo::before);
+  }
+  for(int i = 0; i < transData.device_variable.size(); i++) {
     location = transData.device_variable.at(i).find_first_of("[");
     var = transData.device_variable.at(i).substr(0, location);
     varDeclaration = "device_" + var;
+    var = var+"_flat";
     allocation = "  cudaMalloc((void **) &" + varDeclaration + ", sizeof(" + var + "));";
     attStat = new char[allocation.size()+1];
     strcpy(attStat, allocation.c_str());
@@ -147,6 +173,7 @@ void TwoHostTranslator::translateTwoHost(SgStatement* loopStat, SgLocatedNode *l
       location = transData.device_variable.at(i).find_first_of("[");
       var = transData.device_variable.at(i).substr(0, location);
       varDeclaration = "device_" + var;
+      var = var+"_flat";
       copyHD = "  cudaMemcpy(" + varDeclaration + ", " + var + ", sizeof(" + var + "), cudaMemcpyHostToDevice);";
       attStat = new char[copyHD.size()+1];
       strcpy(attStat, copyHD.c_str());
@@ -171,8 +198,8 @@ void TwoHostTranslator::translateTwoHost(SgStatement* loopStat, SgLocatedNode *l
     size2 = transData.num_of_loops.at(1).substr(1,transData.num_of_loops.at(1).size());
   }
 
-  numThreads = "dim3 numThreads(32,32);";
-  blocks = "dim3 blocks((" + size + "+ 31)/32, (" + size2 + "+ 31)/32);";
+  numThreads = "dim3 numThreads(2,2);";
+  blocks = "dim3 blocks((" + size + "+ 1)/2, (" + size2 + "+ 1)/2);";
   nThreads = "numThreads";
   tblock = "blocks";
   parameters;
@@ -228,6 +255,7 @@ void TwoHostTranslator::translateTwoHost(SgStatement* loopStat, SgLocatedNode *l
       location = transData.device_variable.at(i).find_first_of("[");
       var = transData.device_variable.at(i).substr(0, location);
       varDeclaration = "device_" + var;
+      var = var+"_flat";
       copyHD = "  cudaMemcpy(" + var + ", " + varDeclaration + ", sizeof(" + var + "), cudaMemcpyDeviceToHost);";
       attStat = new char[copyHD.size()+1];
       strcpy(attStat, copyHD.c_str());
@@ -240,6 +268,16 @@ void TwoHostTranslator::translateTwoHost(SgStatement* loopStat, SgLocatedNode *l
     var = transData.device_variable.at(i).substr(0, location);
     varDeclaration = "device_" + var;
     att = attachArbitraryText(ln, "  cudaFree("+varDeclaration+");" ,  PreprocessingInfo::before);  
+  }
+  for(int i = 0; i < transData.device_variable.size(); i++) {
+    string ts = transData.device_variable.at(i);
+    string flatVar = ts.substr(0,ts.find_first_of("["));
+    pair<string,pair<string, string> > pp = varMap[flatVar];
+    string type = pp.first;
+    string fl = pp.second.first;
+    string sl = pp.second.second;
+    string dec  = "for(int ii=0;ii<"+fl+";ii++){for(int jj=0;jj<"+sl+";jj++){"+flatVar+"[ii][jj]="+flatVar+"_flat[ii*("+sl+")+jj];}}";
+    att = attachArbitraryText(ln, dec,  PreprocessingInfo::before);
   }
 
   att = attachArbitraryText(ln, " " ,  PreprocessingInfo::before);

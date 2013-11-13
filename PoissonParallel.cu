@@ -1,20 +1,17 @@
-void __global__ kernel(double **u,double **f,double **unew,int nx,int ny,double dx,double dy)
+
+void __global__ kernel(float *u,float *f,float *unew,int nx,int ny,float dx,float dy)
 {
-  int i;
   int j;
+  int i;
   i = blockIdx.x * blockDim.x + threadIdx.x;
   j = blockIdx.y * blockDim.y + threadIdx.y;
-  if ( i >= nx || j>=ny) { 
-    return;
-  }
-  
-  for(i=0;i<nx;i++){
-    if((((i==0)||(j==0))||(i==(nx-1)))||(j==(ny-1))) {
-      unew[i][j]=f[i][j];
-    }else {
-      unew[i][j]=(0.25*((((u[i-1][j]+u[i][j+1])+u[i][j-1])+u[i+1][j])+((f[i][j]*dx)*dy)));
-    }
 
+  if ( i <nx && j <ny){
+    if((((i==0)||(j==0))||(i==(nx-1)))||(j==(ny-1))) {
+      unew[(i)*ny+j]=f[(i)*ny+j];
+    }else {
+      unew[(i)*ny+j]=(0.25*((((u[(i-1)*ny+j]+u[(i)*ny+j+1])+u[(i)*ny+j-1])+u[(i+1)*ny+j])+((f[(i)*ny+j]*dx)*dy)));
+    }
   }
 }
 # include <stdlib.h>
@@ -25,13 +22,14 @@ void __global__ kernel(double **u,double **f,double **unew,int nx,int ny,double 
 # define NX 11
 # define NY 11
 using namespace std;
+#define double float
 int main(int argc,char *argv[]);
-double r8mat_rms(int nx,int ny,double a[11UL][11UL]);
-void rhs(int nx,int ny,double f[11UL][11UL]);
-void sweep(int nx,int ny,double dx,double dy,double f[11UL][11UL],double u[11UL][11UL],double unew[11UL][11UL]);
+float r8mat_rms(int nx,int ny,float a[11UL][11UL]);
+void rhs(int nx,int ny,float f[11UL][11UL]);
+void sweep(int nx,int ny,float dx,float dy,float f[11UL][11UL],float u[11UL][11UL],float unew[11UL][11UL]);
 void timestamp();
-double u_exact(double x,double y);
-double uxxyy_exact(double x,double y);
+float u_exact(float x,float y);
+float uxxyy_exact(float x,float y);
 /******************************************************************************/
 
 int main(int argc,char *argv[])
@@ -82,28 +80,28 @@ int main(int argc,char *argv[])
    *                                                                                         */
 {
   int converged;
-  double diff;
-  double dx;
-  double dy;
-  double error;
-  double f[11UL][11UL];
+  float diff;
+  float dx;
+  float dy;
+  float error;
+  float f[11UL][11UL];
   int i;
   int it;
   int it_max = 1000;
   int j;
   int nx = 11;
   int ny = 11;
-  double tolerance = 0.000001;
-  double u[11UL][11UL];
-  double u_norm;
-  double udiff[11UL][11UL];
-  double uexact[11UL][11UL];
-  double unew[11UL][11UL];
-  double unew_norm;
-  double x;
-  double y;
-  dx = (1.0 / ((double )(nx - 1)));
-  dy = (1.0 / ((double )(ny - 1)));
+  float tolerance = 0.000001;
+  float u[11UL][11UL];
+  float u_norm;
+  float udiff[11UL][11UL];
+  float uexact[11UL][11UL];
+  float unew[11UL][11UL];
+  float unew_norm;
+  float x;
+  float y;
+  dx = (1.0 / ((float )(nx - 1)));
+  dy = (1.0 / ((float )(ny - 1)));
   /*
    *   Print a message.
    *   */
@@ -146,9 +144,9 @@ int main(int argc,char *argv[])
    *   Set up the exact solution.
    *   */
   for (j = 0; j < ny; j++) {
-    y = (((double )j) / ((double )(ny - 1)));
+    y = (((float )j) / ((float )(ny - 1)));
     for (i = 0; i < nx; i++) {
-      x = (((double )i) / ((double )(nx - 1)));
+      x = (((float )i) / ((float )(nx - 1)));
       uexact[i][j] = u_exact(x,y);
     }
   }
@@ -181,11 +179,15 @@ int main(int argc,char *argv[])
     /*
      *   Check for convergence.
      *   */
-    /*for (j = 0; j < ny; j++) {
-      for (i = 0; i < nx; i++) {
-        (( *(&std::cout)<<"unew after sweep") << unew[i][j]) << std::endl< char  , std::char_traits< char  >  > ;;
-      }
-    }*/
+    /*  for ( j = 0; j < ny; j++ )
+        {
+        for ( i = 0; i < nx; i++ )
+        {
+
+        cout << unew[i][j] << " ";;
+        }
+        }
+     */
     u_norm = unew_norm;
     unew_norm = r8mat_rms(nx,ny,unew);
     for (j = 0; j < ny; j++) {
@@ -224,7 +226,7 @@ int main(int argc,char *argv[])
 }
 /******************************************************************************/
 
-double r8mat_rms(int nx,int ny,double a[11UL][11UL])
+float r8mat_rms(int nx,int ny,float a[11UL][11UL])
   /******************************************************************************/
   /*
    *   Purpose:
@@ -254,19 +256,19 @@ double r8mat_rms(int nx,int ny,double a[11UL][11UL])
 {
   int i;
   int j;
-  double v;
+  float v;
   v = 0.0;
   for (j = 0; j < ny; j++) {
     for (i = 0; i < nx; i++) {
       v = (v + (a[i][j] * a[i][j]));
     }
   }
-  v = sqrt((v / ((double )(nx * ny))));
+  v = (sqrt((v / ((float )(nx * ny)))));
   return v;
 }
 /******************************************************************************/
 
-void rhs(int nx,int ny,double f[11UL][11UL])
+void rhs(int nx,int ny,float f[11UL][11UL])
   /******************************************************************************/
   /*
    *   Purpose:
@@ -314,19 +316,19 @@ void rhs(int nx,int ny,double f[11UL][11UL])
    *                                                                                         Output, double F[NX][NY], the initialized right hand side data.
    *                                                                                         */
 {
-  double fnorm;
+  float fnorm;
   int i;
   int j;
-  double x;
-  double y;
+  float x;
+  float y;
   /*
    *   The "boundary" entries of F store the boundary values of the solution.
    *     The "interior" entries of F store the right hand sides of the Poisson equation.
    *     */
   for (j = 0; j < ny; j++) {
-    y = (((double )j) / ((double )(ny - 1)));
+    y = (((float )j) / ((float )(ny - 1)));
     for (i = 0; i < nx; i++) {
-      x = (((double )i) / ((double )(nx - 1)));
+      x = (((float )i) / ((float )(nx - 1)));
       if ((((i == 0) || (i == (nx - 1))) || (j == 0)) || (j == (ny - 1))) {
         f[i][j] = u_exact(x,y);
       }
@@ -340,7 +342,7 @@ void rhs(int nx,int ny,double f[11UL][11UL])
 }
 /******************************************************************************/
 
-void sweep(int nx,int ny,double dx,double dy,double f[11UL][11UL],double u[11UL][11UL],double unew[11UL][11UL])
+void sweep(int nx,int ny,float dx,float dy,float f[11UL][11UL],float u[11UL][11UL],float unew[11UL][11UL])
   /******************************************************************************/
   /*
    *   Purpose:
@@ -396,23 +398,29 @@ void sweep(int nx,int ny,double dx,double dy,double f[11UL][11UL],double u[11UL]
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
-  double ** device_u;
-  double  **  device_f;
-  double **  device_unew;
+  float *  device_u;
+  float *  device_f;
+  float *  device_unew;
 
   //Allocate memory space in the GPU
-  cudaMalloc((void **) &device_u, sizeof(u));
-  cudaMalloc((void **) &device_f, sizeof(f));
-  cudaMalloc((void **) &device_unew, sizeof(unew));
+  float u_flat[nx*ny];
+  float f_flat[nx*ny];
+  float unew_flat[nx*ny];
+  for(int ii=0;ii<nx;ii++){for(int jj=0;jj<ny;jj++){u_flat[ii*ny+jj] = u[ii][jj];}}
+  for(int ii=0;ii<nx;ii++){for(int jj=0;jj<ny;jj++){f_flat[ii*ny+jj] = f[ii][jj];}}
+  for(int ii=0;ii<nx;ii++){for(int jj=0;jj<ny;jj++){unew_flat[ii*ny+jj] = unew[ii][jj];}}
+  cudaMalloc((void **) &device_u, sizeof(u_flat));
+  cudaMalloc((void **) &device_f, sizeof(f_flat));
+  cudaMalloc((void **) &device_unew, sizeof(unew_flat));
 
   //Copy from host to device
-  cudaMemcpy(device_u, u, sizeof(u), cudaMemcpyHostToDevice);
-  cudaMemcpy(device_f, f, sizeof(f), cudaMemcpyHostToDevice);
-  cudaMemcpy(device_unew, unew, sizeof(unew), cudaMemcpyHostToDevice);
+  cudaMemcpy(device_u, u_flat, sizeof(u_flat), cudaMemcpyHostToDevice);
+  cudaMemcpy(device_f, f_flat, sizeof(f_flat), cudaMemcpyHostToDevice);
+  cudaMemcpy(device_unew, unew_flat, sizeof(unew_flat), cudaMemcpyHostToDevice);
 
   //launch kernel function
   dim3 numThreads(2,2);
-  dim3 blocks((ny+ 1)/2, (nx+ 1)/2);
+  dim3 blocks((nx+ 1)/2, (ny+ 1)/2);
   cudaEventRecord(start, 0);
   kernel<<<blocks,numThreads>>>(device_u,device_f,device_unew, nx, ny,dx,dy);
   cudaEventRecord(stop, 0);
@@ -421,12 +429,15 @@ void sweep(int nx,int ny,double dx,double dy,double f[11UL][11UL],double u[11UL]
   printf("the elapsed time is %f\n", elapsedTime);
 
   //copy back from device to host 
-  cudaMemcpy(u, device_u, sizeof(u), cudaMemcpyDeviceToHost);
-  cudaMemcpy(f, device_f, sizeof(f), cudaMemcpyDeviceToHost);
-  cudaMemcpy(unew, device_unew, sizeof(unew), cudaMemcpyDeviceToHost);
+  cudaMemcpy(u_flat, device_u, sizeof(u_flat), cudaMemcpyDeviceToHost);
+  cudaMemcpy(f_flat, device_f, sizeof(f_flat), cudaMemcpyDeviceToHost);
+  cudaMemcpy(unew_flat, device_unew, sizeof(unew_flat), cudaMemcpyDeviceToHost);
   cudaFree(device_u);
   cudaFree(device_f);
   cudaFree(device_unew);
+  for(int ii=0;ii<nx;ii++){for(int jj=0;jj<ny;jj++){u[ii][jj]=u_flat[ii*ny+jj];}}
+  for(int ii=0;ii<nx;ii++){for(int jj=0;jj<ny;jj++){f[ii][jj]=f_flat[ii*ny+jj];}}
+  for(int ii=0;ii<nx;ii++){for(int jj=0;jj<ny;jj++){unew[ii][jj]=unew_flat[ii*ny+jj];}}
 
   /***** Ending Parallalization *****/
 }
@@ -472,7 +483,7 @@ void timestamp()
 }
 /******************************************************************************/
 
-double u_exact(double x,double y)
+float u_exact(float x,float y)
   /******************************************************************************/
   /*
    *   Purpose:
@@ -499,14 +510,14 @@ double u_exact(double x,double y)
    *                                       at (X,Y).
    *                                       */
 {
-  double pi = 3.141592653589793;
-  double value;
-  value = sin(((pi * x) * y));
+  float pi = 3.141592653589793;
+  float value;
+  value = (sin(((pi * x) * y)));
   return value;
 }
 /******************************************************************************/
 
-double uxxyy_exact(double x,double y)
+float uxxyy_exact(float x,float y)
   /******************************************************************************/
   /*
    *   Purpose:
@@ -533,8 +544,8 @@ double uxxyy_exact(double x,double y)
    *                                       ( d/dx d/dx + d/dy d/dy ) of the exact solution at (X,Y).
    *                                       */
 {
-  double pi = 3.141592653589793;
-  double value;
+  float pi = 3.141592653589793;
+  float value;
   value = (((-pi * pi) * ((x * x) + (y * y))) * sin(((pi * x) * y)));
   return value;
 }
