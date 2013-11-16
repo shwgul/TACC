@@ -8,6 +8,7 @@
 #include "FunctionTwo.h"
 #include <map>
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 using namespace SageInterface;
 using namespace SageBuilder;
 using namespace std;
@@ -71,6 +72,7 @@ string transformLine(string line,map<string,pair<string,pair<string,string> > > 
  */
 void SimpleInstrumentationTwo::visit(SgNode* astNode) {
   int location;
+  srand(200); 
   string var, tmp, type;
   PreprocessingInfo * att;
   SgLocatedNode *ln;
@@ -128,8 +130,13 @@ void SimpleInstrumentationTwo::visit(SgNode* astNode) {
       SgInitializedName *varIniName = buildInitializedName(varName, dataType);
       appendArg(parameterList, varIniName);
     }
+
     //Define function declaration
-    SgName functionName = "__global__ kernel"; 
+    string func_name = "__global__ kernel";
+    std::srand ( std::time(NULL) );
+    int r = kernelVersion;
+    func_name += boost::lexical_cast<string>(r);
+    SgName functionName = func_name; 
     SgFunctionDeclaration * function = buildDefiningFunctionDeclaration
       (functionName, buildVoidType(), parameterList, globalScope);
     SgBasicBlock *functionBody = function->get_definition()->get_body();

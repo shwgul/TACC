@@ -33,7 +33,7 @@ typedef struct
   vector<string> function_declaration;
   vector<string> loopLine;
 } TRANSDATA;
-
+extern int kernelVersion;
 extern "C" TRANSDATA transData;
 //extern TRANSDATA transData;
 typedef map<string, string > MAPA;

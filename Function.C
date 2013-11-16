@@ -16,6 +16,7 @@ using namespace std;
   */
 void SimpleInstrumentation::visit(SgNode* astNode) {
   int location;
+  srand(200);
   string var, tmp, type;
   PreprocessingInfo * att;
   SgLocatedNode *ln;

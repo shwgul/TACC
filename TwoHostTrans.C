@@ -9,6 +9,7 @@
 #include "TwoHostTranslator.h"
 #include "Data.h"
 #include <map>
+#include <boost/lexical_cast.hpp>
 using namespace SageInterface;
 using namespace SageBuilder;
 using namespace AstFromString;
@@ -237,7 +238,10 @@ void TwoHostTranslator::translateTwoHost(SgStatement* loopStat, SgLocatedNode *l
   parameters += scalarParam;
 
   att = attachArbitraryText(ln,"  cudaEventRecord(start, 0);", PreprocessingInfo::before);
-  kernel = "  kernel<<<" + tblock + "," + nThreads + ">>>(" + parameters + ");";
+  std::srand ( std::time(NULL) );
+  int r = rand()%10;
+  kernelVersion = r;
+  kernel = "  kernel"+boost::lexical_cast<string>(r)+"<<<" + tblock + "," + nThreads + ">>>(" + parameters + ");";
   attStat = new char[kernel.size()+1];
   strcpy(attStat, kernel.c_str());
   att = attachArbitraryText(ln, attStat,  PreprocessingInfo::before);

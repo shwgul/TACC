@@ -22,6 +22,7 @@ using namespace AstFromString;
 using namespace std;
 MAPA pairs;
 TRANSDATA transData;
+int kernelVersion;
 /*
 void loadLoopData() {
   string line;
@@ -196,6 +197,7 @@ for(int currentLoop = 0;currentLoop < transData.all_loops.size();currentLoop++) 
   {
     string nodeString = (*nodeIterator)->unparseToString();
     boost::erase_all(nodeString," ");
+    cout << nodeString << endl;
     if(nodeString == selectedLoop) {
       file.open ("../GenData/log.txt");
       file << selectedLoop << " " << nodeString << endl;
@@ -265,4 +267,4 @@ for(int currentLoop = 0;currentLoop < transData.all_loops.size();currentLoop++) 
   cout<<"Compiler Output "<<endl;
   system(cmd.c_str());
   return 0;
-}
+  }

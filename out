@@ -1,31 +1,297 @@
-16Loop to parallelize without spaces 
-for(i=1;i<=dim;i++){for(j=1;j<=dim;j++){intnumNeighbors=(((((((grid[i+1][j]+grid[i-1][j])+grid[i][j+1])+grid[i][j-1])+grid[i+1][j+1])+grid[i-1][j-1])+grid[i-1][j+1])+grid[i+1][j-1]);if((grid[i][j]==1)&&(numNeighbors<2))newGrid[i][j]=0;elseif((grid[i][j]==1)&&((numNeighbors==2)||(numNeighbors==3)))newGrid[i][j]=1;elseif((grid[i][j]==1)&&(numNeighbors>3))newGrid[i][j]=0;elseif((grid[i][j]==0)&&(numNeighbors==3))newGrid[i][j]=1;elsenewGrid[i][j]=grid[i][j];}}
-Variable and types 
-***************************
-argc int
-dim int
-grid int
-i int
-iter int
-j int
-k int
-main int
-maxIter int
-newGrid int
-******************************
-Parallelizing Double nested loop
-Read the file and inner loop                int numNeighbors =(((((((grid[i+1][j]+grid[i-1][j])+grid[i][j+1])+grid[i][j-1])+grid[i+1][j+1])+grid[i-1][j-1])+grid[i-1][j+1])+grid[i+1][j-1]);
-                if ((grid[i][j] == 1) && (numNeighbors < 2))
-                    newGrid[i][j] = 0;
-                else if ((grid[i][j] == 1) && ((numNeighbors == 2) || (numNeighbors == 3)))
-                    newGrid[i][j] = 1;
-                else if ((grid[i][j] == 1) && (numNeighbors > 3))
-                    newGrid[i][j] = 0;
-                else if ((grid[i][j] == 0) && (numNeighbors == 3))
-                    newGrid[i][j] = 1;
-                else
-                    newGrid[i][j] = grid[i][j];
-            }
-Compiling GameOfLife_nonrandom.cu
-Executing nvcc GameOfLife_nonrandom.cu
-Compiler Output 
+5c5
+< #include <stdio.h>
+---
+> //#include <stdio.h>
+9c9
+< #include "LinearTranslator.h"
+---
+> #include "TwoHostTranslator.h"
+11c11
+< 
+---
+> #include <map>
+17c17
+< void LinearTranslator::readFile() {
+---
+> void TwoHostTranslator::readFile() {
+23,25c23,24
+< 	getline (file, line);
+<     	transData.cuda_io.push_back(line);
+< 	cout << transData.cuda_io.at(i) << endl;
+---
+>       getline (file, line);
+>       transData.cuda_io.push_back(line);
+29,31c28,29
+<     	getline (file, line);
+<     	transData.cuda_typeFun.push_back(line);
+<         cout << transData.cuda_typeFun.at(i);
+---
+>         getline (file, line);
+>         transData.cuda_typeFun.push_back(line);
+38,39c36,66
+< /**
+<   * Translate from source program to targt program using a linear pattern.
+---
+> void TwoHostTranslator::setInnerLoop() {
+>   ifstream file ("../GenData/loops.txt");
+>   string line;
+>   if (file.is_open()) {
+>     while(!file.eof()) {
+>       getline (file, line);
+>       transData.loopLine.push_back(line);
+>     }
+>   }
+>   file.close();
+> /* This behavior is wrong 
+>  * TODO
+>   int counter = 0;
+>   int loc = -1;
+>   string var = transData.loop_variable.at(1);
+>   string upper = transData.num_of_loops.at(1);
+>   string clossBracks = "{";
+>   for(int i = 0; i <  transData.loop_file.size(); i++) {
+>     loc = transData.loop_file.at(i).find_first_of("{");
+>     for(int j = 0; j < transData.loopLine.size(); j++) {
+>       if(transData.loopLine.at(j) == transData.loop_file.at(i) && counter < 2) {
+>         if(loc > -1) {
+>           transData.loop_file.at(i) = "if("+var + upper+"){";
+>           loc = -1;
+>         } else {
+>           transData.loop_file.at(i) = "if("+var + upper+")";
+>         }
+>         counter++;
+>       }
+>     }
+>   }
+41,42c68,74
+<  void LinearTranslator::translateLinear(SgStatement* loopStat, SgLocatedNode *ln) {
+<    char *attStat;
+---
+> }
+> 
+> /**
+>  * Translate from source program to targt program using a linear pattern.
+>  */
+> void TwoHostTranslator::translateTwoHost(SgStatement* loopStat, SgLocatedNode *ln) {
+>   char *attStat;
+53a86
+>   string size2;
+59c92
+<  // string type;
+---
+>   // string type;
+64c97,100
+< 
+---
+>   map<string,pair<string,pair<string,string> > > varMap;
+>   //find for loop
+>   setInnerLoop();
+>   cout<<"Read the file and inner loop";
+67,68c103
+<     PreprocessingInfo::before);
+<   
+---
+>       PreprocessingInfo::before);
+76a112,115
+>     bool is2D = false;
+>     if (transData.device_variable.at(i).find_last_of("[") != location) { 
+>       is2D = false;
+>     }
+79,80c118,126
+< 
+<     varDeclaration = type + " * " + " device_" + var + ";";
+---
+>     if (is2D) {
+>       varDeclaration = type + " ** " + " device_" + var + ";";
+>     } else { 
+>       varDeclaration = type + " * " + " device_" + var + ";";
+>     }
+>     string ts = transData.device_variable.at(i);
+>     string fl = ts.substr(ts.find_first_of("[")+1,ts.find_first_of("]") - ts.find_first_of("[")-1);
+>     string sl = ts.substr(ts.find_last_of("[")+1,ts.find_last_of("]") - ts.find_last_of("[")-1);
+>     varMap[var]=make_pair(type,make_pair(fl,sl));;
+82c128
+< 	  strcpy(attStat, varDeclaration.c_str());
+---
+>     strcpy(attStat, varDeclaration.c_str());
+89c135,156
+<     PreprocessingInfo::before);
+---
+>       PreprocessingInfo::before);
+>   for(int i = 0; i < transData.device_variable.size(); i++) {
+>     string ts = transData.device_variable.at(i);
+>     string flatVar = ts.substr(0,ts.find_first_of("["));
+>     pair<string,pair<string, string> > pp = varMap[flatVar];
+>     string type = pp.first;
+>     string fl = pp.second.first;
+>     string sl = pp.second.second;
+>     //string dec  = pairs[flatVar]+"* "+flatVar+"_flat = ("+type+"*)malloc(sizeof("+type+")*"+fl+"*"+sl+");";
+>     string dec = pairs[flatVar] +" "+flatVar+"_flat[("+fl+")*("+sl+")];";
+>     att = attachArbitraryText(ln, dec,  PreprocessingInfo::before);
+>   }
+>   for(int i = 0; i < transData.device_variable.size(); i++) {
+>     string ts = transData.device_variable.at(i);
+>     string flatVar = ts.substr(0,ts.find_first_of("["));
+>     pair<string,pair<string, string> > pp = varMap[flatVar];
+>     string type = pp.first;
+>     string fl = pp.second.first;
+>     string sl = pp.second.second;
+>     string dec  = "for(int ii=0;ii<"+fl+";ii++){for(int jj=0;jj<"+sl+";jj++){"+flatVar+"_flat[ii*("+sl+")+jj] = "+flatVar+"[ii][jj];}}";
+>     att = attachArbitraryText(ln, dec,  PreprocessingInfo::before);
+>   }
+93a161
+>     var = var+"_flat";
+96c164
+< 	  strcpy(attStat, allocation.c_str());
+---
+>     strcpy(attStat, allocation.c_str());
+105,112c173,181
+<      location = transData.device_variable.at(i).find_first_of("[");
+<      var = transData.device_variable.at(i).substr(0, location);
+<      varDeclaration = "device_" + var;
+<      copyHD = "  cudaMemcpy(" + varDeclaration + ", " + var + ", sizeof(" + var + "), cudaMemcpyHostToDevice);";
+<      attStat = new char[copyHD.size()+1];
+< 	  strcpy(attStat, copyHD.c_str());
+<      att = attachArbitraryText(ln, attStat,  PreprocessingInfo::before);
+<    }
+---
+>       location = transData.device_variable.at(i).find_first_of("[");
+>       var = transData.device_variable.at(i).substr(0, location);
+>       varDeclaration = "device_" + var;
+>       var = var+"_flat";
+>       copyHD = "  cudaMemcpy(" + varDeclaration + ", " + var + ", sizeof(" + var + "), cudaMemcpyHostToDevice);";
+>       attStat = new char[copyHD.size()+1];
+>       strcpy(attStat, copyHD.c_str());
+>       att = attachArbitraryText(ln, attStat,  PreprocessingInfo::before);
+>     }
+115c184
+<   
+---
+> 
+120c189
+< 	size = transData.num_of_loops.at(0).substr(2,transData.num_of_loops.at(0).size());
+---
+>     size = transData.num_of_loops.at(0).substr(2,transData.num_of_loops.at(0).size());
+122c191
+<   	size = transData.num_of_loops.at(0).substr(1, transData.num_of_loops.at(0).size());
+---
+>     size = transData.num_of_loops.at(0).substr(1, transData.num_of_loops.at(0).size());
+124,125c193,202
+<   numThreads = "dim3 numThreads(32,1);";
+<   blocks = "dim3 blocks((" + size + "+ 31)/32, 1);";
+---
+> 
+>   location = transData.num_of_loops.at(1).find_first_of("=");
+>   if(location > -1) {
+>     size2 = transData.num_of_loops.at(1).substr(2,transData.num_of_loops.at(1).size());
+>   } else {
+>     size2 = transData.num_of_loops.at(1).substr(1,transData.num_of_loops.at(1).size());
+>   }
+> 
+>   numThreads = "dim3 numThreads(2,2);";
+>   blocks = "dim3 blocks((" + size + "+ 1)/2, (" + size2 + "+ 1)/2);";
+129c206
+<   
+---
+> 
+138c215
+<        varDeclaration = "device_" + var;
+---
+>       varDeclaration = "device_" + var;
+141c218
+<   
+---
+> 
+143,156c220,231
+<       if(transData.scalar_variable.size() == 1) {
+<         scalarParam = ", " + transData.scalar_variable.at(0);
+<       } else {
+<         for(int i = 0; i < transData.scalar_variable.size(); i++) {
+<            if(i == 0) {
+<              scalarParam = ", " + transData.scalar_variable.at(i) + ", ";
+<            }
+<            else if(i > 0 && i < transData.scalar_variable.size()-1) {
+<               scalarParam +=  transData.scalar_variable.at(i) + ",";
+<            } 
+<            else if(i > 0 && i < transData.scalar_variable.size()) {
+<               scalarParam += transData.scalar_variable.at(i);
+<            }
+<          }
+---
+>     if(transData.scalar_variable.size() == 1) {
+>       scalarParam = ", " + transData.scalar_variable.at(0);
+>     } else {
+>       for(int i = 0; i < transData.scalar_variable.size(); i++) {
+>         if(i == 0) {
+>           scalarParam = ", " + transData.scalar_variable.at(i) + ", ";
+>         }
+>         else if(i > 0 && i < transData.scalar_variable.size()-1) {
+>           scalarParam +=  transData.scalar_variable.at(i) + ",";
+>         } 
+>         else if(i > 0 && i < transData.scalar_variable.size()) {
+>           scalarParam += transData.scalar_variable.at(i);
+158,161c233,238
+<      }
+<      
+<      parameters += scalarParam;
+<   
+---
+>       }
+>     }
+>   }
+> 
+>   parameters += scalarParam;
+> 
+165c242
+< 	strcpy(attStat, kernel.c_str());
+---
+>   strcpy(attStat, kernel.c_str());
+172c249
+<   
+---
+> 
+175c252
+<     PreprocessingInfo::before);
+---
+>       PreprocessingInfo::before);
+180a258
+>       var = var+"_flat";
+183c261
+< 	  strcpy(attStat, copyHD.c_str());
+---
+>       strcpy(attStat, copyHD.c_str());
+193a272,281
+>   for(int i = 0; i < transData.device_variable.size(); i++) {
+>     string ts = transData.device_variable.at(i);
+>     string flatVar = ts.substr(0,ts.find_first_of("["));
+>     pair<string,pair<string, string> > pp = varMap[flatVar];
+>     string type = pp.first;
+>     string fl = pp.second.first;
+>     string sl = pp.second.second;
+>     string dec  = "for(int ii=0;ii<"+fl+";ii++){for(int jj=0;jj<"+sl+";jj++){"+flatVar+"[ii][jj]="+flatVar+"_flat[ii*("+sl+")+jj];}}";
+>     att = attachArbitraryText(ln, dec,  PreprocessingInfo::before);
+>   }
+195c283
+< att = attachArbitraryText(ln, " " ,  PreprocessingInfo::before);
+---
+>   att = attachArbitraryText(ln, " " ,  PreprocessingInfo::before);
+197a286,304
+> 
+>   ifstream file ("../GUI/rose_tomosm.c");
+>   string line;
+>   if (file.is_open()) {
+>     while(!file.eof()) {
+>       getline (file, line);
+>       src_file.push_back(line);
+>     }
+>   }
+>   file.close();
+> 
+>   for(int i = 0; i < src_file.size(); i++) {
+>     for(int j = 0; j < transData.loop_file.size(); j++) {
+>       if(src_file.at(i) != transData.loop_file.at(j)) {
+>         break;
+>       }
+>     }
+>     cout << src_file.at(i) << endl;
+>   }
